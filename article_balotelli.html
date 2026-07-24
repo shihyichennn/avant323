@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Why Always Me? — avant°323</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+  <link href="https://api.fontshare.com/v2/css?f[]=tanker@400&display=swap" rel="stylesheet"/>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --white: #f7f5f2;
+      --black: #0c0a0d;
+      --mid:   #888;
+      --faint: #e4e0da;
+      --pink:  #F9C3CD;
+      --hot:   #F71973;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--white);
+      color: var(--black);
+      font-family: 'Satoshi', 'Space Grotesk', sans-serif;
+      font-weight: 400;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── CURSOR ── */
+    .cursor {
+      position: fixed; width: 8px; height: 8px;
+      background: var(--black); border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%);
+      transition: width .2s, height .2s;
+    }
+    .cursor-ring {
+      position: fixed; width: 32px; height: 32px;
+      border: 1px solid var(--black); border-radius: 50%;
+      pointer-events: none; z-index: 9998;
+      transform: translate(-50%,-50%);
+      transition: left .08s, top .08s, width .2s, height .2s, opacity .2s;
+      opacity: .1;
+    }
+
+    /* ── NAV — logo only, fades on scroll ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+      background: var(--white);
+      transition: opacity .35s ease, transform .35s ease;
+    }
+    nav.nav-hidden { opacity: 0; transform: translateY(-10px); pointer-events: none; }
+    .nav-top {
+      height: 62px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .nav-logo {
+      font-family: 'Tanker', sans-serif;
+      font-size: 2.1rem; font-weight: 400; letter-spacing: .01em;
+      text-transform: uppercase; color: var(--black); text-decoration: none;
+      line-height: 1;
+    }
+    .nav-vol {
+      position: absolute; right: 2rem;
+      font-family: 'DM Mono', monospace;
+      font-size: .4rem; letter-spacing: .25em; color: var(--mid);
+    }
+
+    /* ── BURGER ── */
+    .burger {
+      position: absolute; left: 2rem; top: 50%;
+      transform: translateY(-50%);
+      width: 26px; height: 18px;
+      cursor: pointer; z-index: 901;
+      display: flex; flex-direction: column; justify-content: space-between;
+      background: none; border: none; padding: 0;
+    }
+    .burger span {
+      display: block; height: 2px; width: 100%;
+      background: var(--black);
+      transition: transform .32s cubic-bezier(.4,0,.2,1), opacity .25s ease;
+    }
+    .burger.open span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+    .burger.open span:nth-child(2) { opacity: 0; }
+    .burger.open span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+    /* ── MENU OVERLAY — option wheel ── */
+    .menu-overlay {
+      position: fixed; inset: 0; z-index: 800;
+      background: var(--pink);
+      display: none; align-items: center;
+      padding-left: 9vw;
+      overflow: hidden;
+    }
+    .menu-overlay.open { display: flex; }
+    .menu-list { list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+    .menu-item {
+      font-family: 'Satoshi', sans-serif;
+      font-weight: 700;
+      font-size: clamp(2rem, 5vw, 4.2rem);
+      line-height: 1.12; letter-spacing: -.025em;
+      color: var(--hot); cursor: pointer;
+      transform-origin: left center;
+      white-space: nowrap;
+      will-change: transform, filter, opacity;
+    }
+    .menu-item .mi-num {
+      font-family: 'DM Mono', monospace;
+      font-size: .55rem; letter-spacing: .3em;
+      vertical-align: super; margin-right: .8rem; opacity: .7;
+    }
+    .menu-hint {
+      position: absolute; right: 2rem; bottom: 2rem;
+      font-family: 'DM Mono', monospace;
+      font-size: .44rem; letter-spacing: .4em; text-transform: uppercase;
+      color: var(--hot); opacity: .55;
+    }
+    /* menu open: lift nav above overlay so the X stays clickable */
+    body.menu-open nav {
+      z-index: 950;
+      background: transparent;
+      border-bottom-color: transparent;
+    }
+    /* ── DOCK — i-D style, frosted, bottom ── */
+    .dock {
+      position: fixed; bottom: 1.3rem; left: 50%;
+      transform: translateX(-50%);
+      z-index: 600;
+      display: flex; align-items: center; gap: 1.6rem;
+      padding: .45rem 1.5rem .45rem .45rem;
+      background: rgba(60, 55, 58, .45);
+      -webkit-backdrop-filter: blur(16px) saturate(1.1);
+      backdrop-filter: blur(16px) saturate(1.1);
+      border-radius: 20px;
+    }
+    .dock-logo {
+      width: 46px; height: 46px;
+      background: #fff; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Tanker', sans-serif;
+      font-size: 1.25rem; color: var(--black); text-decoration: none;
+      line-height: 1;
+    }
+    .dock-item {
+      font-family: 'Satoshi', sans-serif;
+      font-size: .92rem; font-weight: 500; letter-spacing: .01em;
+      color: #fff; text-decoration: none; text-transform: capitalize;
+      transition: opacity .2s;
+    }
+    .dock-item:hover { opacity: .65; }
+
+    /* ── ARTICLE HEADER — pink block, i-D style ── */
+    .art-hdr {
+      margin-top: 98px;
+      background: var(--pink);
+      padding: 6.5rem 2rem 5.5rem;
+      text-align: center;
+    }
+    .art-hdr .art-cat {
+      font-family: 'DM Mono', monospace;
+      font-size: .46rem; letter-spacing: .5em; text-transform: uppercase;
+      color: var(--hot); display: block; margin-bottom: 2.2rem;
+    }
+    .art-hdr h1 {
+      font-family: 'Satoshi', sans-serif;
+      font-size: clamp(2.1rem, 4.6vw, 4.4rem);
+      font-weight: 700; line-height: 1.04; letter-spacing: -.025em;
+      color: var(--hot);
+      max-width: 1000px; margin: 0 auto 1.8rem;
+    }
+    .art-hdr .art-dek {
+      font-family: 'Satoshi', sans-serif;
+      font-size: .92rem; font-weight: 400; line-height: 1.8;
+      color: var(--hot);
+      max-width: 560px; margin: 0 auto;
+    }
+
+    /* ── HERO ── */
+    .art-hero {
+      width: 100%; height: 92vh;
+      object-fit: cover; object-position: 50% 18%;
+      display: block;
+    }
+
+    /* ── BODY ── */
+    .art-body {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 4rem 2rem 5rem;
+    }
+    .art-credits {
+      font-family: 'DM Mono', monospace;
+      font-size: .5rem; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--black); line-height: 2.4;
+      margin-bottom: 3.5rem;
+    }
+    .art-credits em { font-style: normal; color: var(--mid); }
+    .art-body p {
+      font-family: 'Satoshi', sans-serif;
+      font-size: .95rem; font-weight: 300; line-height: 2.05;
+      color: var(--black);
+      margin-bottom: 2rem;
+    }
+    .art-body p strong { font-weight: 700; }
+    .art-lead::first-letter {
+      font-family: 'Tanker', sans-serif;
+      font-size: 3.6em; float: left; line-height: .82;
+      padding-right: .12em;
+    }
+    .art-img {
+      width: 100%; display: block;
+      margin: 3rem 0 .7rem;
+    }
+    .art-capt {
+      font-family: 'DM Mono', monospace;
+      font-size: .44rem; letter-spacing: .3em; text-transform: uppercase;
+      color: var(--mid); margin-bottom: 3rem;
+    }
+    .art-pull {
+      font-family: 'Satoshi', sans-serif;
+      font-size: clamp(1.5rem, 2.6vw, 2.2rem);
+      font-weight: 700; line-height: 1.25; letter-spacing: -.02em;
+      color: var(--black);
+      margin: 3.5rem 0;
+    }
+    .art-pull mark {
+      background: var(--pink); color: var(--black);
+      padding: .06em .18em;
+      -webkit-box-decoration-break: clone; box-decoration-break: clone;
+    }
+
+    /* ── BACK ── */
+    .art-back {
+      display: block; width: fit-content;
+      margin: 0 auto 5rem;
+      font-family: 'DM Mono', monospace;
+      font-size: .46rem; letter-spacing: .4em; text-transform: uppercase;
+      color: var(--black); text-decoration: none;
+      border-bottom: 1px solid rgba(12,10,13,.25); padding-bottom: .16rem;
+      transition: color .2s, border-color .2s;
+    }
+    .art-back:hover { color: var(--mid); border-color: var(--mid); }
+
+    /* ── COLOPHON ── */
+    .colophon {
+      text-align: center;
+      padding: 1rem 2rem 8.5rem;
+      font-family: 'DM Mono', monospace;
+      font-size: .42rem; letter-spacing: .3em; text-transform: uppercase;
+      color: var(--mid); line-height: 2.4;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="ring"></div>
+
+  <!-- NAV -->
+  <nav id="nav">
+    <div class="nav-top">
+      <button class="burger" id="burger" aria-label="menu">
+        <span></span><span></span><span></span>
+      </button>
+      <a href="avant_7.html" class="nav-logo">avant°323</a>
+      <span class="nav-vol">vol. i — 2025</span>
+    </div>
+  </nav>
+
+  <!-- MENU OVERLAY — option wheel -->
+  <div class="menu-overlay" id="menuOverlay">
+    <ul class="menu-list" id="menuList">
+      <li class="menu-item" data-href="article_balotelli.html"><span class="mi-num">00</span>cover story</li>
+      <li class="menu-item" data-href="avant_7.html#ambient"><span class="mi-num">01</span>ambient</li>
+      <li class="menu-item" data-href="avant_7.html#artifacts"><span class="mi-num">02</span>artifacts</li>
+      <li class="menu-item" data-href="avant_7.html#rightnow"><span class="mi-num">03</span>right now</li>
+      <li class="menu-item" data-href="avant_7.html#weird"><span class="mi-num">04</span>weird & good</li>
+      <li class="menu-item" data-href="avant_7.html#dead"><span class="mi-num">05</span>dead serious</li>
+      <li class="menu-item" data-href="avant_7.html#about"><span class="mi-num">06</span>about avant°323</li>
+      <li class="menu-item" data-href="#"><span class="mi-num">07</span>shop</li>
+    </ul>
+    <div class="menu-hint">scroll to spin — click to go</div>
+  </div>
+
+  <!-- DOCK -->
+  <div class="dock">
+    <a href="avant_7.html" class="dock-logo">a°</a>
+    <a href="#" class="dock-item">Substack</a>
+    <a href="#" class="dock-item">Shop</a>
+    <a href="#" class="dock-item">Search</a>
+  </div>
+
+  <!-- ── ARTICLE HEADER ── -->
+  <header class="art-hdr">
+    <span class="art-cat">fashion — right now</span>
+    <h1>Why Always Me? Mario Balotelli and the Last Wild Era of Football Style</h1>
+    <p class="art-dek">Before the stylists, the brand deals and the tunnel-walk paparazzi economy, there was a striker in a skull beanie and pink headphones — the most honestly dressed man in football.</p>
+  </header>
+
+  <!-- ── HERO ── -->
+  <img class="art-hero" src="圖片使用/Mario Balotelli.JPG" alt=""/>
+
+  <!-- ── BODY ── -->
+  <article class="art-body">
+    <div class="art-credits">
+      words <em>ADA CHEN</em><br/>
+      photography <em>PRESS & PAPARAZZI ARCHIVE, 2008–2013</em><br/>
+      section <em>RIGHT NOW — 時下</em>
+    </div>
+
+    <p class="art-lead">There is a photograph of Mario Balotelli walking through Manchester in a champagne-beige nylon jacket, toothpick in mouth, chain swinging from his cargo pants, completely unaware — or completely aware — that a man with a camera is trailing him like a moon. It is not an outfit anyone would advise. That is exactly why it works. Nobody advised it.</p>
+
+    <p>Football fashion in 2025 is a supply chain. A player walks from the team bus to the dressing room and the tunnel becomes a runway: stylist-approved, brand-tagged, posted before kickoff. It is beautiful and it is dead. Between roughly 2008 and 2013 — the Balotelli years — the tunnel was not a runway. It was a psychiatric evaluation.</p>
+
+    <img class="art-img" src="圖片使用/Mario Balotelli2.JPG" alt=""/>
+    <div class="art-capt">inter years — mohawk, wraparound shades, wired earphones. milan, circa 2009</div>
+
+    <p>He arrived at Inter as a teenager with a mohawk and the face of someone who had already decided not to explain himself. The earphones were wired. The sunglasses were enormous. The polo was club-issued and he wore it like couture, which is to say: with total indifference. José Mourinho called him unmanageable. The cameras called him constantly.</p>
+
+    <img class="art-img" src="圖片使用/Mario Balotelli3.JPG" alt=""/>
+    <div class="art-capt">with marko arnautović, pre-match. two teenagers wearing the same kit like rival philosophies</div>
+
+    <p>What made Balotelli's style radical was not the clothes. It was the refusal of the concept of appropriateness. A club suit, worn correctly — with a skull-print beanie and fuchsia Beats clamped over it. Airport-lounge whites accessorized with pink headphones the size of dinner plates. A flat cap, a sky-blue training polo, and a Louis Vuitton toiletry case carried like a football under one arm. Every look answers the same question: <strong>what if you simply did not care about the difference between contexts?</strong></p>
+
+    <img class="art-img" src="圖片使用/Mario Balotelli5.JPG" alt=""/>
+    <div class="art-capt">club suit, skull beanie, pink beats. manchester city travel day, 2011 — the single greatest outfit in premier league history</div>
+
+    <p class="art-pull"><mark>The famous shirt said WHY ALWAYS ME? — but the clothes had been asking the question for years.</mark></p>
+
+    <p>The mythology is inseparable from the wardrobe. The fireworks set off in his own bathroom the night before the Manchester derby. The camouflage Bentley, which defeats the purpose of both camouflage and Bentley. Driving into a women's prison "to have a look." Handing out cash outside a casino. Struggling, live on television, with a training bib — a garment with one hole — while a stadium watched. Then scoring against United the next day and lifting his shirt: <strong>WHY ALWAYS ME?</strong> Deadpan. Unsmiling. The most quotable garment of the decade.</p>
+
+    <img class="art-img" src="圖片使用/Mario Balotelli4.JPG" alt=""/>
+    <div class="art-capt">airport whites, pink beats, boarding pass in hand. the departure lounge as runway, years before the tunnel walk existed</div>
+
+    <p>It would be easy to file all this under chaos. But look again at the photographs. The proportions are consistently ahead of their time — the wide trouser, the shrunken polo, the tonal beige-on-beige, the deliberate collision of luxury object and sportswear. Half of what menswear editors celebrated in 2023 was on Balotelli's body in 2010, photographed outside a Manchester taxi rank, captioned as a meltdown.</p>
+
+    <img class="art-img" src="圖片使用/Mario Balotelli6.JPG" alt=""/>
+    <div class="art-capt">flat cap, sky blue, damier louis vuitton. the toiletry bag carried the way other men carry a football</div>
+
+    <p>The lineage is visible every week now. A winger crosses a rain-soaked pitch in socks and slides, phone in hand, tracksuit tucked exactly wrong — and it is styled, approved, sponsored. The gesture survives; the risk is gone. Balotelli's clothes were never content. They were symptoms — of boredom, of genius, of a twenty-year-old with infinite money and no interest whatsoever in being understood.</p>
+
+    <img class="art-img" src="圖片使用/IMG_7305.JPG" alt=""/>
+    <div class="art-capt">the inheritance: socks, slides, tracksuit — the balotelli silhouette, now league-wide standard issue</div>
+
+    <p>Fashion keeps trying to manufacture what he had. It cannot, because what he had was not taste. It was sovereignty — the complete absence of an audience in his head. Why always him? Because he was the only one not performing.</p>
+
+  </article>
+
+  <a href="avant_7.html" class="art-back">← back to avant°323</a>
+
+  <div class="colophon">
+    avant°323 — a personal publication by ada chen<br/>© 2025 — all rights reserved
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script>
+    const cursor = document.getElementById('cursor');
+    const ring   = document.getElementById('ring');
+    let mx = 0, my = 0;
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+    });
+    setInterval(() => { ring.style.left = mx + 'px'; ring.style.top = my + 'px'; }, 80);
+
+    /* nav: fade out scrolling down, back on scroll up */
+    const navEl = document.getElementById('nav');
+    let lastY = window.scrollY;
+    let menuOpen = false;
+    window.addEventListener('scroll', () => {
+      if (menuOpen) return;
+      const y = window.scrollY;
+      if (y > 140 && y > lastY + 2) navEl.classList.add('nav-hidden');
+      else if (y < lastY - 2 || y <= 140) navEl.classList.remove('nav-hidden');
+      lastY = y;
+    }, { passive: true });
+
+    /* menu overlay: option wheel */
+    const burger  = document.getElementById('burger');
+    const overlay = document.getElementById('menuOverlay');
+    const items   = [...document.querySelectorAll('.menu-item')];
+    let current = 0;
+    let wheelAcc = 0;
+
+    function renderWheel(animate = true, entrance = false) {
+      items.forEach((el, i) => {
+        const off = i - current;
+        const abs = Math.abs(off);
+        gsap.to(el, {
+          opacity: Math.max(.14, 1 - .3 * abs),
+          filter: `blur(${Math.min(6, abs * 2.2)}px)`,
+          rotate: off * -6,
+          x: abs * 14,
+          scale: Math.max(.6, 1 - .1 * abs),
+          duration: animate ? .5 : 0,
+          delay: entrance ? i * .05 : 0,
+          ease: 'power3.out',
+          overwrite: 'auto'
+        });
+      });
+    }
+    function openMenu() {
+      menuOpen = true;
+      overlay.classList.add('open');
+      burger.classList.add('open');
+      navEl.classList.remove('nav-hidden');
+      document.body.classList.add('menu-open');
+      document.body.style.overflow = 'hidden';
+      gsap.killTweensOf(overlay);
+      gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: .28, ease: 'power2.out', overwrite: 'auto' });
+      gsap.set(items, { opacity: 0, x: -60 });
+      renderWheel(true, true);
+    }
+    function closeMenu() {
+      menuOpen = false;
+      burger.classList.remove('open');
+      document.body.classList.remove('menu-open');
+      gsap.killTweensOf(overlay);
+      gsap.to(overlay, { opacity: 0, duration: .22, ease: 'power2.in', overwrite: 'auto',
+        onComplete: () => overlay.classList.remove('open') });
+      document.body.style.overflow = '';
+    }
+    burger.addEventListener('click', () => menuOpen ? closeMenu() : openMenu());
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeMenu(); });
+    document.addEventListener('keydown', e => {
+      if (!menuOpen) return;
+      if (e.key === 'Escape') closeMenu();
+      if (e.key === 'ArrowDown') { current = Math.min(items.length - 1, current + 1); renderWheel(); }
+      if (e.key === 'ArrowUp')   { current = Math.max(0, current - 1); renderWheel(); }
+    });
+    overlay.addEventListener('wheel', e => {
+      e.preventDefault();
+      wheelAcc += e.deltaY;
+      if (Math.abs(wheelAcc) > 60) {
+        current = Math.min(items.length - 1, Math.max(0, current + (wheelAcc > 0 ? 1 : -1)));
+        wheelAcc = 0;
+        renderWheel();
+      }
+    }, { passive: false });
+    items.forEach((el, i) => {
+      el.addEventListener('mouseenter', () => { current = i; renderWheel(); });
+      el.addEventListener('click', () => {
+        const href = el.dataset.href;
+        closeMenu();
+        if (href && href !== '#') window.location.href = href;
+      });
+    });
+    document.querySelectorAll('a').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        cursor.style.width = '14px'; cursor.style.height = '14px';
+        ring.style.width = '44px'; ring.style.height = '44px'; ring.style.opacity = '.25';
+      });
+      el.addEventListener('mouseleave', () => {
+        cursor.style.width = '8px'; cursor.style.height = '8px';
+        ring.style.width = '32px'; ring.style.height = '32px'; ring.style.opacity = '.1';
+      });
+    });
+  </script>
+</body>
+</html>

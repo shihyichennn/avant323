@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>avant°323</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+  <link href="https://api.fontshare.com/v2/css?f[]=tanker@400&display=swap" rel="stylesheet"/>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --white: #f7f5f2;
+      --black: #0c0a0d;
+      --mid:   #888;
+      --faint: #e4e0da;
+      --pink:  #F9C3CD;
+      --hot:   #F71973;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--white);
+      color: var(--black);
+      font-family: 'Satoshi', 'Space Grotesk', sans-serif;
+      font-weight: 400;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── CURSOR ── */
+    .cursor {
+      position: fixed; width: 8px; height: 8px;
+      background: var(--black); border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%);
+      transition: width .2s, height .2s;
+    }
+    .cursor-ring {
+      position: fixed; width: 32px; height: 32px;
+      border: 1px solid var(--black); border-radius: 50%;
+      pointer-events: none; z-index: 9998;
+      transform: translate(-50%,-50%);
+      transition: left .08s, top .08s, width .2s, height .2s, opacity .2s;
+      opacity: .1;
+    }
+
+    /* ── NAV — logo only, fades on scroll ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+      background: var(--white);
+      transition: opacity .35s ease, transform .35s ease;
+    }
+    nav.nav-hidden { opacity: 0; transform: translateY(-10px); pointer-events: none; }
+    .nav-top {
+      height: 62px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .nav-logo {
+      font-family: 'Tanker', sans-serif;
+      font-size: 2.1rem; font-weight: 400; letter-spacing: .01em;
+      text-transform: uppercase; color: var(--black); text-decoration: none;
+      line-height: 1;
+    }
+    .nav-vol {
+      position: absolute; right: 2rem;
+      font-family: 'DM Mono', monospace;
+      font-size: .4rem; letter-spacing: .25em; color: var(--mid);
+    }
+
+    /* ── BURGER ── */
+    .burger {
+      position: absolute; left: 2rem; top: 50%;
+      transform: translateY(-50%);
+      width: 26px; height: 18px;
+      cursor: pointer; z-index: 901;
+      display: flex; flex-direction: column; justify-content: space-between;
+      background: none; border: none; padding: 0;
+    }
+    .burger span {
+      display: block; height: 2px; width: 100%;
+      background: var(--black);
+      transition: transform .32s cubic-bezier(.4,0,.2,1), opacity .25s ease;
+    }
+    .burger.open span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+    .burger.open span:nth-child(2) { opacity: 0; }
+    .burger.open span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+    /* ── MENU OVERLAY — option wheel ── */
+    .menu-overlay {
+      position: fixed; inset: 0; z-index: 800;
+      background: var(--pink);
+      display: none; align-items: center;
+      padding-left: 9vw;
+      overflow: hidden;
+    }
+    .menu-overlay.open { display: flex; }
+    .menu-list { list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+    .menu-item {
+      font-family: 'Satoshi', sans-serif;
+      font-weight: 700;
+      font-size: clamp(2rem, 5vw, 4.2rem);
+      line-height: 1.12; letter-spacing: -.025em;
+      color: var(--hot); cursor: pointer;
+      transform-origin: left center;
+      white-space: nowrap;
+      will-change: transform, filter, opacity;
+    }
+    .menu-item .mi-num {
+      font-family: 'DM Mono', monospace;
+      font-size: .55rem; letter-spacing: .3em;
+      vertical-align: super; margin-right: .8rem; opacity: .7;
+    }
+    .menu-hint {
+      position: absolute; right: 2rem; bottom: 2rem;
+      font-family: 'DM Mono', monospace;
+      font-size: .44rem; letter-spacing: .4em; text-transform: uppercase;
+      color: var(--hot); opacity: .55;
+    }
+    /* menu open: lift nav above overlay so the X stays clickable */
+    body.menu-open nav {
+      z-index: 950;
+      background: transparent;
+      border-bottom-color: transparent;
+    }
+
+    /* ── DOCK — i-D style, frosted, bottom ── */
+    .dock {
+      position: fixed; bottom: 1.3rem; left: 50%;
+      transform: translateX(-50%);
+      z-index: 600;
+      display: flex; align-items: center; gap: 1.6rem;
+      padding: .45rem 1.5rem .45rem .45rem;
+      background: rgba(60, 55, 58, .45);
+      -webkit-backdrop-filter: blur(16px) saturate(1.1);
+      backdrop-filter: blur(16px) saturate(1.1);
+      border-radius: 20px;
+    }
+    .dock-logo {
+      width: 46px; height: 46px;
+      background: #fff; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Tanker', sans-serif;
+      font-size: 1.25rem; color: var(--black); text-decoration: none;
+      line-height: 1;
+    }
+    .dock-item {
+      font-family: 'Satoshi', sans-serif;
+      font-size: .92rem; font-weight: 500; letter-spacing: .01em;
+      color: #fff; text-decoration: none; text-transform: capitalize;
+      transition: opacity .2s;
+    }
+    .dock-item:hover { opacity: .65; }
+
+    /* ── COVER ── */
+    .cover { margin-top: 62px; }
+    .cover-img-wrap { display: block; position: relative; }
+    .cover-img {
+      width: 100%; height: 92vh;
+      object-fit: cover; object-position: 50% 8%;
+      display: block;
+    }
+    .cover-caption { padding: 1.8rem 2rem 1rem; }
+    .cover-title {
+      font-family: 'Satoshi', sans-serif;
+      font-size: clamp(1.6rem, 3.2vw, 2.9rem);
+      font-weight: 700; line-height: 1.15; letter-spacing: -.02em;
+      color: var(--black); text-decoration: none; display: block;
+    }
+    .cover-title:hover { text-decoration: underline; text-underline-offset: 5px; }
+    .cover-meta {
+      font-family: 'DM Mono', monospace;
+      font-size: .42rem; letter-spacing: .42em; text-transform: uppercase;
+      color: var(--mid); margin-top: 1.1rem;
+    }
+
+    /* ── SECTION HEADERS ── */
+    .s-hdr {
+      padding: 4.5rem 2rem 1.6rem;
+      display: flex; justify-content: space-between; align-items: baseline;
+    }
+    .s-hdr .s-label {
+      font-family: 'Satoshi', sans-serif;
+      font-size: 1.1rem; font-weight: 700; letter-spacing: -.01em;
+      text-transform: lowercase; color: var(--black);
+    }
+    .s-hdr .s-num {
+      font-family: 'DM Mono', monospace;
+      font-size: .42rem; letter-spacing: .2em; color: var(--mid);
+    }
+    .s-hdr-dark {
+      padding: 3rem 2rem 1.4rem;
+      display: flex; justify-content: space-between; align-items: baseline;
+    }
+    .s-hdr-dark .s-label {
+      font-family: 'Satoshi', sans-serif;
+      font-size: 1.1rem; font-weight: 700; letter-spacing: -.01em;
+      text-transform: lowercase; color: var(--hot);
+    }
+    .s-hdr-dark .s-num {
+      font-family: 'DM Mono', monospace;
+      font-size: .42rem; letter-spacing: .2em; color: var(--hot);
+      opacity: .6;
+    }
+
+    /* ── SHARED ARTICLE TYPE ── */
+    .a-cat {
+      font-family: 'DM Mono', monospace;
+      font-size: .42rem; letter-spacing: .42em; text-transform: uppercase;
+      color: var(--mid); margin-bottom: .25rem;
+    }
+    .a-byline {
+      font-family: 'DM Mono', monospace;
+      font-size: .42rem; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--mid); display: block; margin-bottom: .9rem;
+    }
+    .a-title-lg {
+      font-family: 'Satoshi', sans-serif;
+      font-size: clamp(1.9rem, 3vw, 3.4rem);
+      font-weight: 700; line-height: 1.05; letter-spacing: -.02em;
+      color: var(--black); text-decoration: none; display: block;
+      margin-bottom: 1.1rem;
+    }
+    .a-title-lg:hover { text-decoration: underline; text-underline-offset: 5px; }
+    .a-title-sm {
+      font-family: 'Satoshi', sans-serif;
+      font-size: .92rem; font-weight: 700; line-height: 1.2; letter-spacing: -.015em;
+      color: var(--black); text-decoration: none; display: block;
+      margin-bottom: .4rem;
+    }
+    .a-title-sm:hover { text-decoration: underline; text-underline-offset: 3px; }
+    .a-excerpt {
+      font-family: 'Satoshi', sans-serif;
+      font-size: .78rem; line-height: 1.95;
+      color: var(--black); font-weight: 300;
+    }
+    .a-excerpt-sm {
+      font-family: 'Satoshi', sans-serif;
+      font-size: .7rem; line-height: 1.8;
+      color: var(--black); font-weight: 300;
+    }
+
+    /* ── FEATURED — i-D: left dominant, right small ── */
+    .featured {
+      display: grid; grid-template-columns: 2fr 1fr;
+      gap: 0 2.6rem;
+      padding: 0 2rem 4rem;
+    }
+    .feat-l { padding-top: 1rem; }
+    .feat-r { padding-top: 1rem; display: flex; flex-direction: column; gap: 2.6rem; }
+
+    .feat-img {
+      width: 100%; aspect-ratio: 4/5;
+      object-fit: cover; display: block; margin-bottom: 1.6rem;
+    }
+    .rn-img {
+      width: 100%; aspect-ratio: 4/5;
+      object-fit: cover; display: block; margin-bottom: 1.6rem;
+    }
+    .sec-thumb {
+      width: 100%; aspect-ratio: 4/3;
+      object-fit: cover; display: block; margin-bottom: .8rem;
+    }
+
+    /* ── PINK SECTIONS ── */
+    .section-pink { background: var(--pink); }
+
+    .hscroll-wrap { overflow-x: auto; scrollbar-width: none; padding: 1rem 2rem 3rem; }
+    .hscroll-wrap::-webkit-scrollbar { display: none; }
+    .hscroll { display: flex; gap: 1.8rem; width: max-content; }
+    .hcard { width: 280px; flex-shrink: 0; cursor: pointer; }
+    .hcard-ph { width: 100%; aspect-ratio: 4/5; overflow: hidden; }
+    .hcard-ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .hcard-body { padding: .9rem 0; }
+    .hcard-cat {
+      font-family: 'DM Mono', monospace;
+      font-size: .4rem; letter-spacing: .4em; text-transform: uppercase;
+      color: var(--hot); margin-bottom: .4rem;
+    }
+    .hcard-title {
+      font-family: 'Satoshi', sans-serif;
+      font-size: .92rem; font-weight: 700; line-height: 1.2; color: var(--hot);
+    }
+    .hcard-meta {
+      font-family: 'DM Mono', monospace;
+      font-size: .38rem; letter-spacing: .15em; color: var(--hot);
+      margin-top: .55rem;
+    }
+
+    /* ── INTERSTITIAL — fullscreen scroll moment ── */
+    .inter { height: 175vh; position: relative; }
+    .inter-sticky {
+      position: sticky; top: 0; height: 100vh;
+      overflow: hidden; opacity: 0;
+    }
+    .inter-img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: 50% 30%;
+      display: block;
+    }
+    .inter-txt {
+      position: absolute; left: 2rem; bottom: 2.4rem;
+      max-width: 780px;
+      text-shadow: 0 1px 18px rgba(12,10,13,.45);
+    }
+    .inter-cat {
+      font-family: 'DM Mono', monospace;
+      font-size: .46rem; letter-spacing: .45em; text-transform: uppercase;
+      color: rgba(247,245,242,.85);
+      display: block; margin-bottom: .9rem;
+    }
+    .inter-title {
+      font-family: 'Satoshi', sans-serif;
+      font-size: clamp(1.7rem, 3.4vw, 3.2rem);
+      font-weight: 700; line-height: 1.08; letter-spacing: -.02em;
+      color: var(--white); text-decoration: none; display: block;
+      margin-bottom: .9rem;
+    }
+    .inter-title:hover { text-decoration: underline; text-underline-offset: 6px; }
+    .inter-by {
+      font-family: 'DM Mono', monospace;
+      font-size: .44rem; letter-spacing: .3em; text-transform: uppercase;
+      color: rgba(247,245,242,.75);
+    }
+
+    /* ── RIGHT NOW ── */
+    .rightnow {
+      display: grid; grid-template-columns: 2fr 1fr;
+      gap: 0 2.6rem;
+      padding: 0 2rem 4rem;
+    }
+    .rn-l { padding-top: 1rem; }
+    .rn-r { padding-top: 1rem; display: flex; flex-direction: column; gap: 2.6rem; }
+
+    /* ── QUOTE ── */
+    .quote-wrap { padding: 14rem 2rem 12rem; }
+    .q-label {
+      font-family: 'DM Mono', monospace;
+      font-size: .44rem; letter-spacing: .5em; text-transform: uppercase;
+      color: var(--mid); margin-bottom: 2.5rem; display: block;
+    }
+    .q-text {
+      font-family: 'Satoshi', sans-serif;
+      font-size: clamp(2rem, 5vw, 5.5rem);
+      font-weight: 400; line-height: 1.05; letter-spacing: -.025em;
+      color: var(--black); max-width: 1050px;
+    }
+    .q-text .w { display: inline-block; will-change: opacity, filter; }
+    .q-attr {
+      font-family: 'DM Mono', monospace;
+      font-size: .42rem; letter-spacing: .35em; text-transform: uppercase;
+      color: var(--mid); margin-top: 2.5rem; display: block;
+    }
+
+    /* ── WEIRD & GOOD — image grid ── */
+    .wg-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 1.8rem;
+      padding: 0 2rem 4.5rem;
+    }
+    .wg-card { cursor: pointer; }
+    .wg-ph { width: 100%; aspect-ratio: 4/3; overflow: hidden; margin-bottom: .8rem; }
+    .wg-ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .wg-cat {
+      font-family: 'DM Mono', monospace;
+      font-size: .4rem; letter-spacing: .38em; text-transform: uppercase;
+      color: var(--mid); margin-bottom: .35rem;
+    }
+    .wg-title {
+      font-family: 'Satoshi', sans-serif;
+      font-size: .92rem; font-weight: 700; line-height: 1.2; letter-spacing: -.015em;
+      color: var(--black);
+    }
+
+    /* ── DEAD SERIOUS ── */
+    .ds-grid {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 1.8rem;
+      margin: 0 2rem; padding-bottom: 3.5rem;
+    }
+    .ds-item { cursor: pointer; }
+    .ds-ph { width: 100%; aspect-ratio: 4/3; overflow: hidden; margin-bottom: 1rem; }
+    .ds-ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .ds-cat {
+      font-family: 'DM Mono', monospace;
+      font-size: .4rem; letter-spacing: .42em; text-transform: uppercase;
+      color: var(--hot); margin-bottom: .5rem;
+    }
+    .ds-title {
+      font-family: 'Satoshi', sans-serif;
+      font-size: 1rem; font-weight: 700; line-height: 1.2; color: var(--hot);
+      letter-spacing: -.01em; margin-bottom: .65rem;
+    }
+    .ds-meta {
+      font-family: 'DM Mono', monospace;
+      font-size: .38rem; letter-spacing: .15em; color: var(--hot);
+    }
+
+    /* ── ABOUT ── */
+    .about {
+      display: grid; grid-template-columns: 1fr 1fr;
+      min-height: 65vh;
+    }
+    .about-txt {
+      padding: 5rem 3rem 5rem 2rem;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .about-ph { overflow: hidden; }
+    .about-ph img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; display: block; }
+    .about-label {
+      font-family: 'DM Mono', monospace;
+      font-size: .42rem; letter-spacing: .45em; text-transform: uppercase;
+      color: var(--mid); margin-bottom: 2.5rem; display: block;
+    }
+    .about-h {
+      font-family: 'Satoshi', sans-serif;
+      font-size: clamp(1.8rem, 3vw, 3rem);
+      font-weight: 700; line-height: 1.05; letter-spacing: -.025em;
+      color: var(--black); margin-bottom: 2rem;
+    }
+    .about-h em { font-style: italic; display: block; }
+    .about-body {
+      font-family: 'Satoshi', sans-serif;
+      font-size: .78rem; line-height: 2.0; color: var(--black);
+      font-weight: 300; margin-bottom: 2rem;
+    }
+    .about-body strong { color: var(--black); font-weight: 500; }
+    .about-link {
+      font-family: 'DM Mono', monospace;
+      font-size: .42rem; letter-spacing: .35em; text-transform: uppercase;
+      color: var(--black); text-decoration: none;
+      border-bottom: 1px solid rgba(12,10,13,.25); padding-bottom: .14rem;
+      width: fit-content; transition: color .2s, border-color .2s;
+    }
+    .about-link:hover { color: var(--mid); border-color: var(--mid); }
+
+    /* ── COLOPHON ── */
+    .colophon {
+      text-align: center;
+      padding: 4rem 2rem 8.5rem;
+      font-family: 'DM Mono', monospace;
+      font-size: .42rem; letter-spacing: .3em; text-transform: uppercase;
+      color: var(--mid); line-height: 2.4;
+    }
+
+    /* ── REVEAL ── */
+    .reveal { opacity: 0; transform: translateY(18px); transition: opacity .85s ease, transform .85s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="ring"></div>
+
+  <!-- NAV — logo only -->
+  <nav id="nav">
+    <div class="nav-top">
+      <button class="burger" id="burger" aria-label="menu">
+        <span></span><span></span><span></span>
+      </button>
+      <a href="#" class="nav-logo">avant°323</a>
+      <span class="nav-vol">vol. i — 2025</span>
+    </div>
+  </nav>
+
+  <!-- MENU OVERLAY — option wheel -->
+  <div class="menu-overlay" id="menuOverlay">
+    <ul class="menu-list" id="menuList">
+      <li class="menu-item" data-href="article_balotelli.html"><span class="mi-num">00</span>cover story</li>
+      <li class="menu-item" data-href="#ambient"><span class="mi-num">01</span>ambient</li>
+      <li class="menu-item" data-href="#artifacts"><span class="mi-num">02</span>artifacts</li>
+      <li class="menu-item" data-href="#rightnow"><span class="mi-num">03</span>right now</li>
+      <li class="menu-item" data-href="#weird"><span class="mi-num">04</span>weird & good</li>
+      <li class="menu-item" data-href="#dead"><span class="mi-num">05</span>dead serious</li>
+      <li class="menu-item" data-href="#about"><span class="mi-num">06</span>about avant°323</li>
+      <li class="menu-item" data-href="#"><span class="mi-num">07</span>shop</li>
+    </ul>
+    <div class="menu-hint">scroll to spin — click to go</div>
+  </div>
+
+  <!-- DOCK -->
+  <div class="dock">
+    <a href="#" class="dock-logo">a°</a>
+    <a href="#" class="dock-item">Substack</a>
+    <a href="#" class="dock-item">Shop</a>
+    <a href="#" class="dock-item">Search</a>
+  </div>
+
+  <!-- ── COVER ── -->
+  <div class="cover">
+    <a href="article_balotelli.html" class="cover-img-wrap">
+      <img class="cover-img" src="圖片使用/Mario Balotelli.JPG" alt=""/>
+    </a>
+    <div class="cover-caption">
+      <a href="article_balotelli.html" class="cover-title">Why Always Me? Mario Balotelli and the Last Wild Era of Football Style</a>
+      <div class="cover-meta">fashion — ada chen — read the story</div>
+    </div>
+  </div>
+
+  <!-- ── AMBIENT ── -->
+  <div id="ambient">
+    <div class="s-hdr">
+      <span class="s-label">ambient</span>
+      <span class="s-num">日常思索 — 01</span>
+    </div>
+    <div class="featured reveal">
+      <div class="feat-l">
+        <img class="feat-img" src="圖片使用/Serge Lutens photography.jpg" alt="" style="object-position: 50% 40%;"/>
+        <div class="a-cat">film essay</div>
+        <span class="a-byline">ada chen</span>
+        <a href="#" class="a-title-lg">Kubrick's Silence: On the Violence of Beautiful Stillness</a>
+        <p class="a-excerpt">There is a specific kind of dread that only Kubrick understood — the horror that lives not in what happens, but in the absolute certainty that something will. Long takes that feel like someone is watching. Rooms that feel too large. The sound of breathing in silence.</p>
+      </div>
+      <div class="feat-r">
+        <div class="sec-art">
+          <img class="sec-thumb" src="圖片使用/IMG_4943.JPG" alt="" style="object-position: 82% 30%;"/>
+          <div class="a-cat">personal essay</div>
+          <a href="#" class="a-title-sm">Softness as Resistance: Notes on Staying Tender</a>
+          <p class="a-excerpt-sm">Sometimes the most radical thing you can do is be completely, uncynically soft about something.</p>
+        </div>
+        <div class="sec-art">
+          <img class="sec-thumb" src="圖片使用/IMG_2653.jpeg" alt="" style="object-position: 50% 30%;"/>
+          <div class="a-cat">observation</div>
+          <a href="#" class="a-title-sm">Why the Most Interesting People Are Always Slightly Unsettling</a>
+          <p class="a-excerpt-sm">Comfort is the enemy of fascination. The people who stay with you made you feel a little unsafe.</p>
+        </div>
+        <div class="sec-art">
+          <img class="sec-thumb" src="圖片使用/IMG_7400.jpg" alt=""/>
+          <div class="a-cat">photography</div>
+          <a href="#" class="a-title-sm">Two Figures, One Tree: Notes on Standing Still</a>
+          <p class="a-excerpt-sm">Mist, rock, and the exact distance two people keep when neither wants to leave first.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ARTIFACTS — pink ── -->
+  <div class="section-pink" id="artifacts">
+    <div class="s-hdr-dark">
+      <span class="s-label">artifacts</span>
+      <span class="s-num">藝文 — 02</span>
+    </div>
+    <div class="hscroll-wrap reveal">
+      <div class="hscroll">
+        <div class="hcard">
+          <div class="hcard-ph"><img src="圖片使用/IMG_6451.jpeg" alt=""/></div>
+          <div class="hcard-body">
+            <div class="hcard-cat">architecture</div>
+            <div class="hcard-title">The Future That Already Happened: On World's Fair Modernism</div>
+            <div class="hcard-meta">ada chen — 2025</div>
+          </div>
+        </div>
+        <div class="hcard">
+          <div class="hcard-ph"><img src="圖片使用/shanghai.jpeg" alt=""/></div>
+          <div class="hcard-body">
+            <div class="hcard-cat">art deco</div>
+            <div class="hcard-title">Neon Deco: Shanghai and the Architecture of Vertical Dreams</div>
+            <div class="hcard-meta">ada chen — 2025</div>
+          </div>
+        </div>
+        <div class="hcard">
+          <div class="hcard-ph"><img src="圖片使用/IMG_7409.jpg" alt=""/></div>
+          <div class="hcard-body">
+            <div class="hcard-cat">architecture</div>
+            <div class="hcard-title">Glass Brick Cathedrals: Light You Can't See Through</div>
+            <div class="hcard-meta">ada chen — 2025</div>
+          </div>
+        </div>
+        <div class="hcard">
+          <div class="hcard-ph"><img src="圖片使用/dune_paul.JPG" alt="" style="object-position: 50% 12%;"/></div>
+          <div class="hcard-body">
+            <div class="hcard-cat">film & aesthetics</div>
+            <div class="hcard-title">Wasteland Couture: From Fury Road to Arrakis</div>
+            <div class="hcard-meta">ada chen — 2025</div>
+          </div>
+        </div>
+        <div class="hcard">
+          <div class="hcard-ph"><img src="圖片使用/IMG_7404.jpg" alt="" style="object-position: 50% 18%;"/></div>
+          <div class="hcard-body">
+            <div class="hcard-cat">ink & manga</div>
+            <div class="hcard-title">D Rides at Dusk: The Gothic Line of Vampire Hunter D</div>
+            <div class="hcard-meta">ada chen — 2025</div>
+          </div>
+        </div>
+        <div class="hcard">
+          <div class="hcard-ph"><img src="圖片使用/張曼玉.JPG" alt="" style="object-position: 32% 35%;"/></div>
+          <div class="hcard-body">
+            <div class="hcard-cat">film</div>
+            <div class="hcard-title">In the Mood: Maggie Cheung and the Art of Waiting</div>
+            <div class="hcard-meta">ada chen — 2025</div>
+          </div>
+        </div>
+        <div class="hcard">
+          <div class="hcard-ph"><img src="圖片使用/romulas.WEBP" alt="" style="object-position: 50% 18%;"/></div>
+          <div class="hcard-body">
+            <div class="hcard-cat">photography</div>
+            <div class="hcard-title">Soft Stone: Boys, Henry Moore, and Standing Very Still</div>
+            <div class="hcard-meta">ada chen — 2025</div>
+          </div>
+        </div>
+        <div class="hcard">
+          <div class="hcard-ph"><img src="圖片使用/IMG_7399.jpg" alt=""/></div>
+          <div class="hcard-body">
+            <div class="hcard-cat">installation</div>
+            <div class="hcard-title">One Hundred Jars and a Branch: On Keeping Nothing</div>
+            <div class="hcard-meta">ada chen — 2025</div>
+          </div>
+        </div>
+        <div class="hcard">
+          <div class="hcard-ph"><img src="圖片使用/IMG_7403.jpg" alt=""/></div>
+          <div class="hcard-body">
+            <div class="hcard-cat">painting</div>
+            <div class="hcard-title">Behind the Willow: A Face Drawn in Falling Ink</div>
+            <div class="hcard-meta">ada chen — 2025</div>
+          </div>
+        </div>
+        <div class="hcard">
+          <div class="hcard-ph"><img src="圖片使用/IMG_7407.jpg" alt=""/></div>
+          <div class="hcard-body">
+            <div class="hcard-cat">dance</div>
+            <div class="hcard-title">Forget-Me-Nots: Dancing Through the 1920s in Blue</div>
+            <div class="hcard-meta">ada chen — 2025</div>
+          </div>
+        </div>
+        <div class="hcard">
+          <div class="hcard-ph"><img src="圖片使用/IMG_7405.jpg" alt=""/></div>
+          <div class="hcard-body">
+            <div class="hcard-cat">album art</div>
+            <div class="hcard-title">Bitches Brew: The Cover That Sounds Loud</div>
+            <div class="hcard-meta">ada chen — 2025</div>
+          </div>
+        </div>
+        <div class="hcard">
+          <div class="hcard-ph"><img src="圖片使用/IMG_7406.jpg" alt="" style="object-position: 50% 20%;"/></div>
+          <div class="hcard-body">
+            <div class="hcard-cat">illustration</div>
+            <div class="hcard-title">Steinberg's Museum: Drawing the People Who Look</div>
+            <div class="hcard-meta">ada chen — 2025</div>
+          </div>
+        </div>
+        <div class="hcard">
+          <div class="hcard-ph"><img src="圖片使用/IMG_7410.jpg" alt=""/></div>
+          <div class="hcard-body">
+            <div class="hcard-cat">contemporary</div>
+            <div class="hcard-title">Blood, Fly, Paper Towel: Painting After Disgust</div>
+            <div class="hcard-meta">ada chen — 2025</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── INTERSTITIAL — fullscreen scroll moment ── -->
+  <section class="inter">
+    <div class="inter-sticky" id="interSticky">
+      <img class="inter-img" src="圖片使用/IMG_7397.jpg" alt=""/>
+      <div class="inter-txt">
+        <span class="inter-cat">city — 城市筆記</span>
+        <a href="#" class="inter-title">Seven Storeys Up, the City Turns Its Lights On: New York at 7:48 PM</a>
+        <span class="inter-by">ada chen — from the notebook</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── RIGHT NOW ── -->
+  <div id="rightnow">
+    <div class="s-hdr">
+      <span class="s-label">right now</span>
+      <span class="s-num">時下 — 03</span>
+    </div>
+    <div class="rightnow reveal">
+      <div class="rn-l">
+        <img class="rn-img" src="圖片使用/kate moss.JPG" alt="" style="object-position: 50% 12%;"/>
+        <div class="a-cat">fashion</div>
+        <span class="a-byline">ada chen</span>
+        <a href="#" class="a-title-lg">Kate Moss in Gazelles: Notes on Not Trying</a>
+        <p class="a-excerpt">A black tank top, cropped trousers, burgundy Gazelles on a yellow brocade bed. Nothing about it is styled and all of it is style — the point where fashion stops being an outfit and becomes a temperament.</p>
+      </div>
+      <div class="rn-r">
+        <div class="sec-art">
+          <img class="sec-thumb" src="圖片使用/王菲.JPG" alt="" style="object-position: 50% 68%;"/>
+          <div class="a-cat">pop icon</div>
+          <a href="#" class="a-title-sm">Faye Wong Doesn't Care, and That's the Whole Point</a>
+          <p class="a-excerpt-sm">The original blueprint for cool: sing like heaven, shrug like you've never read a single comment.</p>
+        </div>
+        <div class="sec-art">
+          <img class="sec-thumb" src="圖片使用/2Hollis.JPG" alt="" style="object-position: 50% 62%;"/>
+          <div class="a-cat">music</div>
+          <a href="#" class="a-title-sm">2hollis and the New Architecture of Noise</a>
+          <p class="a-excerpt-sm">There is a reason his shows feel like watching someone survive something in real time.</p>
+        </div>
+        <div class="sec-art">
+          <img class="sec-thumb" src="圖片使用/IMG_7408.jpg" alt=""/>
+          <div class="a-cat">photography</div>
+          <a href="#" class="a-title-sm">Fairy Wings on a Tuesday</a>
+          <p class="a-excerpt-sm">Somewhere between school and dinner, a pair of wings that refuse the week entirely.</p>
+        </div>
+        <div class="sec-art">
+          <img class="sec-thumb" src="圖片使用/IMG_6990.JPG" alt="" style="object-position: 50% 45%;"/>
+          <div class="a-cat">performance</div>
+          <a href="#" class="a-title-sm">Stagecraft: In Praise of the Backup Dancer</a>
+          <p class="a-excerpt-sm">The spotlight loves one body, but the choreography only exists because of five.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUOTE — GSAP scroll reveal -->
+  <div class="quote-wrap">
+    <span class="q-label">on obsession</span>
+    <h2 class="q-text" id="qtext">"I like wire, broken glass, sweat and pistols. I like a little bit of blood and saliva on concrete. Teeth."</h2>
+    <span class="q-attr">— david lynch</span>
+  </div>
+
+  <!-- ── WEIRD & GOOD — image grid ── -->
+  <div id="weird">
+    <div class="s-hdr">
+      <span class="s-label">weird & good</span>
+      <span class="s-num">有趣分享 — 04</span>
+    </div>
+    <div class="wg-grid reveal">
+      <div class="wg-card">
+        <div class="wg-ph"><img src="圖片使用/IMG_7398.jpg" alt=""/></div>
+        <div class="wg-cat">field manual</div>
+        <div class="wg-title">How to Walk in Loose Cut: A Six-Step Guide</div>
+      </div>
+      <div class="wg-card">
+        <div class="wg-ph"><img src="圖片使用/IMG_7402.jpg" alt="" style="object-position: 50% 25%;"/></div>
+        <div class="wg-cat">icon</div>
+        <div class="wg-title">Andy Warhol Liked Computers More Than You Do</div>
+      </div>
+      <div class="wg-card">
+        <div class="wg-ph"><img src="圖片使用/IMG_7401.jpg" alt=""/></div>
+        <div class="wg-cat">photography</div>
+        <div class="wg-title">The Same Woman, Twice: Portraits Twenty Years Apart</div>
+      </div>
+      <div class="wg-card">
+        <div class="wg-ph"><img src="圖片使用/IMG_6993.WEBP" alt=""/></div>
+        <div class="wg-cat">internet aesthetics</div>
+        <div class="wg-title">In Defense of the Default Screensaver Ocean</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DEAD SERIOUS — pink ── -->
+  <div class="section-pink" id="dead">
+    <div class="s-hdr-dark">
+      <span class="s-label">dead serious</span>
+      <span class="s-num">哲思理論 — 05</span>
+    </div>
+    <div class="ds-grid reveal">
+      <div class="ds-item">
+        <div class="ds-ph"><img src="圖片使用/IMG_1882.jpeg" alt=""/></div>
+        <div class="ds-cat">theory</div>
+        <div class="ds-title">On the Aesthetics of Longing: Why We Love What We Cannot Have</div>
+        <div class="ds-meta">ada chen — 2025</div>
+      </div>
+      <div class="ds-item">
+        <div class="ds-ph"><img src="圖片使用/IMG_7333.JPG" alt=""/></div>
+        <div class="ds-cat">architecture & society</div>
+        <div class="ds-title">The Atrium Complex: Public Space That Wants to Be Photographed</div>
+        <div class="ds-meta">ada chen — 2025</div>
+      </div>
+      <div class="ds-item">
+        <div class="ds-ph"><img src="圖片使用/IMG_2327.WEBP" alt=""/></div>
+        <div class="ds-cat">painting & power</div>
+        <div class="ds-title">Standing Before the Lions: On Composed Terror and Quiet Courage</div>
+        <div class="ds-meta">ada chen — 2025</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="about reveal" id="about">
+    <div class="about-txt">
+      <span class="about-label">about avant°323</span>
+      <h2 class="about-h">Culture moves fast.<em>Most people miss it.</em>avant°323 sees first.</h2>
+      <p class="about-body"><strong>avant°323</strong> is a personal publication by Ada Chen — writer, observer, and someone who has spent most of her life noticing the things happening just underneath the surface of things.<br/><br/>Essays on film, fashion, music, and the strange niche corners of culture that don't have a category yet. Written with obsession. Edited with precision.</p>
+      <a href="#" class="about-link">read more about ada →</a>
+    </div>
+    <div class="about-ph"><img src="圖片使用/Tiffany Day.JPG" alt=""/></div>
+  </div>
+
+  <!-- COLOPHON -->
+  <div class="colophon">
+    avant°323 — a personal publication by ada chen<br/>© 2025 — all rights reserved
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+  <script>
+    /* ── cursor ── */
+    const cursor = document.getElementById('cursor');
+    const ring   = document.getElementById('ring');
+    let mx = 0, my = 0;
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+    });
+    setInterval(() => { ring.style.left = mx + 'px'; ring.style.top = my + 'px'; }, 80);
+    document.querySelectorAll('a, .hcard, .wg-card, .ds-item').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        cursor.style.width = '14px'; cursor.style.height = '14px';
+        ring.style.width = '44px'; ring.style.height = '44px'; ring.style.opacity = '.25';
+      });
+      el.addEventListener('mouseleave', () => {
+        cursor.style.width = '8px'; cursor.style.height = '8px';
+        ring.style.width = '32px'; ring.style.height = '32px'; ring.style.opacity = '.1';
+      });
+    });
+
+    /* ── reveal on scroll ── */
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.05 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+    /* ── nav: fade out scrolling down, back on scroll up ── */
+    const nav = document.getElementById('nav');
+    let lastY = window.scrollY;
+    let menuOpen = false;
+    window.addEventListener('scroll', () => {
+      if (menuOpen) return;
+      const y = window.scrollY;
+      if (y > 140 && y > lastY + 2) nav.classList.add('nav-hidden');
+      else if (y < lastY - 2 || y <= 140) nav.classList.remove('nav-hidden');
+      lastY = y;
+    }, { passive: true });
+
+    /* ── menu overlay: option wheel ── */
+    const burger  = document.getElementById('burger');
+    const overlay = document.getElementById('menuOverlay');
+    const items   = [...document.querySelectorAll('.menu-item')];
+    let current = 1;                       // start focused on "ambient"
+    let wheelAcc = 0;
+
+    function renderWheel(animate = true, entrance = false) {
+      items.forEach((el, i) => {
+        const off = i - current;
+        const abs = Math.abs(off);
+        gsap.to(el, {
+          opacity: Math.max(.14, 1 - .3 * abs),
+          filter: `blur(${Math.min(6, abs * 2.2)}px)`,
+          rotate: off * -6,
+          x: abs * 14,
+          scale: Math.max(.6, 1 - .1 * abs),
+          duration: animate ? .5 : 0,
+          delay: entrance ? i * .05 : 0,
+          ease: 'power3.out',
+          overwrite: 'auto'
+        });
+      });
+    }
+
+    function openMenu() {
+      menuOpen = true;
+      overlay.classList.add('open');
+      burger.classList.add('open');
+      nav.classList.remove('nav-hidden');
+      document.body.classList.add('menu-open');
+      document.body.style.overflow = 'hidden';
+      gsap.killTweensOf(overlay);
+      gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: .28, ease: 'power2.out', overwrite: 'auto' });
+      gsap.set(items, { opacity: 0, x: -60 });
+      renderWheel(true, true);
+    }
+    function closeMenu() {
+      menuOpen = false;
+      burger.classList.remove('open');
+      document.body.classList.remove('menu-open');
+      gsap.killTweensOf(overlay);
+      gsap.to(overlay, { opacity: 0, duration: .22, ease: 'power2.in', overwrite: 'auto',
+        onComplete: () => overlay.classList.remove('open') });
+      document.body.style.overflow = '';
+    }
+    burger.addEventListener('click', () => menuOpen ? closeMenu() : openMenu());
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeMenu(); });
+    document.addEventListener('keydown', e => {
+      if (!menuOpen) return;
+      if (e.key === 'Escape') closeMenu();
+      if (e.key === 'ArrowDown') { current = Math.min(items.length - 1, current + 1); renderWheel(); }
+      if (e.key === 'ArrowUp')   { current = Math.max(0, current - 1); renderWheel(); }
+    });
+    overlay.addEventListener('wheel', e => {
+      e.preventDefault();
+      wheelAcc += e.deltaY;
+      if (Math.abs(wheelAcc) > 60) {
+        current = Math.min(items.length - 1, Math.max(0, current + (wheelAcc > 0 ? 1 : -1)));
+        wheelAcc = 0;
+        renderWheel();
+      }
+    }, { passive: false });
+    items.forEach((el, i) => {
+      el.addEventListener('mouseenter', () => { current = i; renderWheel(); });
+      el.addEventListener('click', () => {
+        const href = el.dataset.href;
+        closeMenu();
+        if (href && href !== '#') {
+          if (href.startsWith('#')) {
+            setTimeout(() => document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' }), 280);
+          } else {
+            window.location.href = href;
+          }
+        }
+      });
+    });
+
+    /* ── GSAP scroll animations ── */
+    gsap.registerPlugin(ScrollTrigger);
+
+    /* interstitial: fade in → hold → fade out */
+    gsap.timeline({
+      scrollTrigger: {
+        trigger: '.inter',
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: true
+      }
+    })
+    .fromTo('#interSticky', { opacity: 0 }, { opacity: 1, duration: .3, ease: 'none' })
+    .to('#interSticky', { opacity: 1, duration: .45, ease: 'none' })
+    .to('#interSticky', { opacity: 0, duration: .25, ease: 'none' });
+
+    /* quote: word-by-word scroll reveal (blur + opacity + lift, slight rotation) */
+    const qtext = document.getElementById('qtext');
+    qtext.innerHTML = qtext.textContent.trim().split(/\s+/)
+      .map(w => `<span class="w">${w}</span>`).join(' ');
+    gsap.fromTo(qtext, { rotate: 4, transformOrigin: '0% 50%' }, {
+      rotate: 0, ease: 'none',
+      scrollTrigger: { trigger: '.quote-wrap', start: 'top 95%', end: 'top 20%', scrub: true }
+    });
+    gsap.fromTo('#qtext .w',
+      { opacity: .06, filter: 'blur(10px)', y: 26 },
+      {
+        opacity: 1, filter: 'blur(0px)', y: 0, stagger: .08, ease: 'none',
+        scrollTrigger: { trigger: '.quote-wrap', start: 'top 88%', end: 'center 42%', scrub: true }
+      }
+    );
+  </script>
+</body>
+</html>
