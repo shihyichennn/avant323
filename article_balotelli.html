@@ -455,16 +455,20 @@
     let current = 0;
     let wheelAcc = 0;
 
+    /* touch devices have no hover: show every option clearly instead of the wheel blur */
+    const isTouch = () => window.matchMedia('(max-width: 768px)').matches;
+
     function renderWheel(animate = true, entrance = false) {
+      const flat = isTouch();
       items.forEach((el, i) => {
         const off = i - current;
         const abs = Math.abs(off);
         gsap.to(el, {
-          opacity: Math.max(.14, 1 - .3 * abs),
-          filter: `blur(${Math.min(6, abs * 2.2)}px)`,
-          rotate: off * -6,
-          x: abs * 14,
-          scale: Math.max(.6, 1 - .1 * abs),
+          opacity: flat ? 1 : Math.max(.14, 1 - .3 * abs),
+          filter: flat ? 'blur(0px)' : `blur(${Math.min(6, abs * 2.2)}px)`,
+          rotate: flat ? 0 : off * -6,
+          x: flat ? 0 : abs * 14,
+          scale: flat ? 1 : Math.max(.6, 1 - .1 * abs),
           duration: animate ? .5 : 0,
           delay: entrance ? i * .05 : 0,
           ease: 'power3.out',
