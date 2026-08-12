@@ -9,7 +9,7 @@
 !/index.html
 !/avant_7.html
 !/article_balotelli.html
-!/圖片使用/
+!/圖片webp/
 
 # 圖片資料夾內排除系統暫存檔
 圖片使用/.DS_Store
